@@ -1,3 +1,4 @@
+TAP_PACKAGE=1
 _MODULE="astropy"
 _VERSION="1.1.1"
 
