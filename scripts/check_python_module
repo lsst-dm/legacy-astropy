@@ -9,6 +9,7 @@ from __future__ import print_function
 import sys
 import importlib
 import argparse
+import re
 
 parser = argparse.ArgumentParser(description="Check presence and version of a Python module")
 parser.add_argument("module", help="python module to check")
@@ -36,8 +37,16 @@ except ImportError:
 #
 # Check version compatibility
 #
+astropy_version = module.__version__
+# Remove any trailing characters from astropy version numbers after the
+# first character that is neither a digit nor a ".".
+# This does mean that 4.0.0.rc1 would become 4.0.0. so we have to clean that
+astropy_version = re.sub(r"[^.\d].*$", "", astropy_version)
+# Trailing "."
+astropy_version = re.sub(r"\.$", "", astropy_version)
+
 needver = list(map(int, version.split('.')))
-havever = list(map(int, module.__version__.split('.'))) + [0] * len(needver)
+havever = list(map(int, astropy_version.split('.'))) + [0] * len(needver)
 for a, b in zip(needver, havever):
     if a > b:
         print("error: %(module)s version too old (v%(havever)s)."
