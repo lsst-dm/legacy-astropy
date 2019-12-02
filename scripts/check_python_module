@@ -34,19 +34,32 @@ except ImportError:
           file=sys.stderr)
     exit(-1)
 
+
+def split_version(verstring):
+    """Split a version string into a list of version components.
+    """
+    vers = []
+    for v in verstring.split("."):
+        # only care about leading digits
+        # Assumes that for the purposes of version checking 4.0rc1 == 4.0.0
+        matchint = re.match(r"(\d+)", v)
+        if matchint:
+            vers.append(int(matchint.group(1)))
+        else:
+            raise ValueError(f"Version string ({verstring}) does not have numeric components")
+    return vers
+
+
 #
 # Check version compatibility
 #
-astropy_version = module.__version__
-# Remove any trailing characters from astropy version numbers after the
-# first character that is neither a digit nor a ".".
-# This does mean that 4.0.0.rc1 would become 4.0.0. so we have to clean that
-astropy_version = re.sub(r"[^.\d].*$", "", astropy_version)
-# Trailing "."
-astropy_version = re.sub(r"\.$", "", astropy_version)
+needver = split_version(version)
+havever = split_version(module.__version__)
 
-needver = [int(d) for d in version.split(".")]
-havever = [int(d) for d in astropy_version.split('.')] + [0] * len(needver)
+# For comparison, ensure that we pad havever with 0s since if we
+# have version 4.0 but need to compare with 3.0.0 we are really using 4.0.0
+havever += [0]*(len(needver) - len(havever))
+
 for a, b in zip(needver, havever):
     if a > b:
         print("error: %(module)s version too old (v%(havever)s)."
