@@ -9,6 +9,7 @@ from __future__ import print_function
 import sys
 import importlib
 import argparse
+import re
 
 parser = argparse.ArgumentParser(description="Check presence and version of a Python module")
 parser.add_argument("module", help="python module to check")
@@ -25,27 +26,41 @@ version = args.min_version
 try:
     module = importlib.import_module(modname)
 except ImportError:
-    print("error: %(module)s is not installed."
-          " Please install %(module)s v%(needver)s or later and try again." % {
-              'module': modname,
-              'needver': version
-          },
+    print(f"error: {modname} is not installed."
+          f" Please install {modname} v{version} or later and try again.",
           file=sys.stderr)
     exit(-1)
+
+
+def split_version(verstring):
+    """Split a version string into a list of version components.
+    """
+    vers = []
+    for v in verstring.split("."):
+        # only care about leading digits
+        # Assumes that for the purposes of version checking 4.0rc1 == 4.0.0
+        matchint = re.match(r"(\d+)", v)
+        if matchint:
+            vers.append(int(matchint.group(1)))
+        else:
+            raise ValueError(f"Version string ({verstring}) does not have numeric components")
+    return vers
+
 
 #
 # Check version compatibility
 #
-needver = list(map(int, version.split('.')))
-havever = list(map(int, module.__version__.split('.'))) + [0] * len(needver)
+needver = split_version(version)
+havever = split_version(module.__version__)
+
+# For comparison, ensure that we pad havever with 0s since if we
+# have version 4.0 but need to compare with 3.0.0 we are really using 4.0.0
+havever += [0]*(len(needver) - len(havever))
+
 for a, b in zip(needver, havever):
     if a > b:
-        print("error: %(module)s version too old (v%(havever)s)."
-              " Please install %(module)s v%(needver)s or later and try again." % {
-                  'module': modname,
-                  'havever': module.__version__,
-                  'needver': version
-              },
+        print(f"error: {modname} version too old (v{module.__version__})."
+              f" Please install {modname} v{version} or later and try again.",
               file=sys.stderr)
         exit(-1)
     elif a < b:
