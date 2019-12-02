@@ -26,11 +26,8 @@ version = args.min_version
 try:
     module = importlib.import_module(modname)
 except ImportError:
-    print("error: %(module)s is not installed."
-          " Please install %(module)s v%(needver)s or later and try again." % {
-              'module': modname,
-              'needver': version
-          },
+    print(f"error: {modname} is not installed."
+          f" Please install {modname} v{version} or later and try again.",
           file=sys.stderr)
     exit(-1)
 
@@ -62,12 +59,8 @@ havever += [0]*(len(needver) - len(havever))
 
 for a, b in zip(needver, havever):
     if a > b:
-        print("error: %(module)s version too old (v%(havever)s)."
-              " Please install %(module)s v%(needver)s or later and try again." % {
-                  'module': modname,
-                  'havever': module.__version__,
-                  'needver': version
-              },
+        print(f"error: {modname} version too old (v{module.__version__})."
+              f" Please install {modname} v{version} or later and try again.",
               file=sys.stderr)
         exit(-1)
     elif a < b:
