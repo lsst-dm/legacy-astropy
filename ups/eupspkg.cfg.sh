@@ -1,6 +1,6 @@
 TAP_PACKAGE=1
 _MODULE="astropy"
-_VERSION="3.1.2"
+_VERSION="4.0.0"
 
 config()
 {
